@@ -61,6 +61,9 @@ public:
     //! 
     single_template(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff):
         queue(dirname,maxFileSize,maxFiles){}
+    single_template():queue("/tmp/invalid_argument",0,0){
+        throw std::invalid_argument("ict::queue::single constructor should have arguments!");
+    }
     //! 
     //! @brief Dodaje element do kolejki.
     //! 

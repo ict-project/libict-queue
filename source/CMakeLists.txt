@@ -14,6 +14,8 @@ set(CMAKE_SOURCE_FILES
   file-interface.cpp
   basic.cpp
   single.cpp
+  dir-pool.cpp
+  pool.cpp
 )
 
 add_library(ict-static STATIC ${CMAKE_SOURCE_FILES})

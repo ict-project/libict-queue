@@ -1,5 +1,5 @@
 //! @file
-//! @brief Types - header file.
+//! @brief Queue pool module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
 //! @version 1.0
 //! @date 2012-2021
@@ -33,57 +33,46 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
-#ifndef _TYPES_HEADER
-#define _TYPES_HEADER
 //============================================
-#include <cstdint>
-#include <iostream>
-#include <exception>
-#include <stdexcept>
+#include "pool.hpp"
 //============================================
-namespace ict { namespace  queue { namespace  types {
+namespace ict { namespace  queue { 
+//============================================
+
 //===========================================
-//! Typ - Ścieżka do pliku lub kataogu
-typedef std::string path_t;
-//! Typ - Typ rekordu zapisanego w pliku.
-enum record_type_t {
-    //! Rekord zawiera rozmiar danych elementu kolejki, który następuje zaraz za tym rekordem.
-    payload_size_record=0,
-    //! Wskazuje miejsce w pliku, na którym odczyt się zatrzymał.
-    read_pointer_record,
-    //! Informuje o odczycie elementu i wskazuje miejsce w pliku, na którym odczyt się zatrzymał.
-    read_confirm_record,
-    //! Zapisuje aktualny rozmiar kolejki.
-    queue_size_record
-};
-//! Typ - Rekord zapisywany w pliku.
-struct record_t {
-    record_type_t type;
-    std::size_t data;
-};
-//! 
-//! @brief Zapis rekordu do pliku.
-//! 
-//! @param s Zapisywany plik (strumień wyjściowy).
-//! @param r Rekord do zapisu.
-//! @return Strumień wyjściowy.
-//! 
-inline std::ostream & operator << (std::ostream & s, const record_t & r) {
-    s.write((char*)(&r),sizeof(record_t));
-    return(s);
-}
-//! 
-//! @brief Odczyt rekordu z pliku.
-//! 
-//! @param s Odczytywany plik (strumień wejściowy).
-//! @param r Rekord do odczytu.
-//! @return Strumień wejściowy.
-//! 
-inline std::istream & operator >> (std::istream & s, const record_t & r) {
-    s.read((char*)(&r),sizeof(record_t));
-    return(s);
-}
+} }
 //===========================================
-} } }
-//============================================
+#ifdef ENABLE_TESTING
+#include "test.hpp"
+
+#if defined(__cpp_lib_filesystem)
+ #include <filesystem>
+ namespace fs=std::filesystem;
+#else
+ #include <experimental/filesystem>
+ namespace fs=std::experimental::filesystem;
 #endif
+
+static ict::queue::types::path_t dirpath("/tmp/test-pool");
+REGISTER_TEST(pool,tc1){
+    int out=0;
+    fs::create_directory(dirpath);
+    if (out==0){
+        ict::queue::pool pool(dirpath);
+        if(pool["pierwszy"].size()!=0){
+            out=1;
+        }
+    }
+    if (out==0){
+        ict::queue::pool pool(dirpath);
+        if(!pool.count("pierwszy")){
+            out=2;
+        }
+        pool.erase("pierwszy");
+        pool.clear();
+    }
+    fs::remove_all(dirpath);
+    return(out);
+}
+#endif
+//===========================================

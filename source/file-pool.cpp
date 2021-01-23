@@ -37,16 +37,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "file-pool.hpp"
 #include <map>
 #include <regex>
-#include <exception>
-#include <stdexcept>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include <experimental/filesystem>
+
+#if defined(__cpp_lib_filesystem)
+ #include <filesystem>
+ namespace fs=std::filesystem;
+#else
+ #include <experimental/filesystem>
+ namespace fs=std::experimental::filesystem;
+#endif
 //============================================
 namespace ict { namespace  queue { namespace  file {
-//============================================
-namespace fs=std::experimental::filesystem;
 //============================================
 pool::pool(const ict::queue::types::path_t & dirname,const std::size_t & max):dir(dirname),maxSize(max){
     loadFileList();
@@ -166,7 +169,15 @@ void pool::removeFile(const ict::queue::types::path_t & path) const {
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
-namespace fs=std::experimental::filesystem;
+
+#if defined(__cpp_lib_filesystem)
+ #include <filesystem>
+ namespace fs=std::filesystem;
+#else
+ #include <experimental/filesystem>
+ namespace fs=std::experimental::filesystem;
+#endif
+
 static ict::queue::types::path_t dirpath("/tmp/test-filepool");
 static void test_createFile(const ict::queue::types::path_t & path) {
     std::ofstream f;

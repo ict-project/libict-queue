@@ -45,8 +45,15 @@ namespace ict { namespace  queue {
 #ifdef ENABLE_TESTING
 #include "test.hpp"
 #include <chrono>
-#include <experimental/filesystem>
-namespace fs=std::experimental::filesystem;
+
+#if defined(__cpp_lib_filesystem)
+ #include <filesystem>
+ namespace fs=std::filesystem;
+#else
+ #include <experimental/filesystem>
+ namespace fs=std::experimental::filesystem;
+#endif
+
 static ict::queue::types::path_t dirpath("/tmp/test-single");
 REGISTER_TEST(single,tc1){
     int out=0;
