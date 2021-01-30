@@ -62,7 +62,26 @@ install(
 ################################################################
 enable_testing()
 
-add_test(NAME ict-all COMMAND ${PROJECT_NAME}-test)
+add_test(NAME ict-filepool-tc1 COMMAND ${PROJECT_NAME}-test ict filepool tc1)
+add_test(NAME ict-filepool-tc2 COMMAND ${PROJECT_NAME}-test ict filepool tc2)
+add_test(NAME ict-filepool-tc3 COMMAND ${PROJECT_NAME}-test ict filepool tc3)
+add_test(NAME ict-filepool-tc4 COMMAND ${PROJECT_NAME}-test ict filepool tc4)
+add_test(NAME ict-filepool-tc5 COMMAND ${PROJECT_NAME}-test ict filepool tc5)
+add_test(NAME ict-filepool-tc6 COMMAND ${PROJECT_NAME}-test ict filepool tc6)
+add_test(NAME ict-fileinterface-tc1 COMMAND ${PROJECT_NAME}-test ict fileinterface tc1)
+add_test(NAME ict-basic-tc1 COMMAND ${PROJECT_NAME}-test ict basic tc1)
+add_test(NAME ict-basic-tc2 COMMAND ${PROJECT_NAME}-test ict basic tc2)
+add_test(NAME ict-basic-tc3 COMMAND ${PROJECT_NAME}-test ict basic tc3)
+add_test(NAME ict-basic-tc4 COMMAND ${PROJECT_NAME}-test ict basic tc4)
+add_test(NAME ict-basic-tc5 COMMAND ${PROJECT_NAME}-test ict basic tc5)
+add_test(NAME ict-single-tc1 COMMAND ${PROJECT_NAME}-test ict single tc1)
+add_test(NAME ict-single-tc2 COMMAND ${PROJECT_NAME}-test ict single tc2)
+add_test(NAME ict-single-tc3 COMMAND ${PROJECT_NAME}-test ict single tc3)
+add_test(NAME ict-dirpool-tc1 COMMAND ${PROJECT_NAME}-test ict dirpool tc1)
+add_test(NAME ict-dirpool-tc2 COMMAND ${PROJECT_NAME}-test ict dirpool tc2)
+add_test(NAME ict-dirpool-tc3 COMMAND ${PROJECT_NAME}-test ict dirpool tc3)
+add_test(NAME ict-dirpool-tc4 COMMAND ${PROJECT_NAME}-test ict dirpool tc4)
+add_test(NAME ict-pool-tc1 COMMAND ${PROJECT_NAME}-test ict pool tc1)
 
 ################################################################
 #set(CPACK_GENERATOR "TZ;TGZ;STGZ;DEB;RPM") # Linux

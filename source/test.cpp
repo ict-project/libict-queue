@@ -55,21 +55,21 @@ bool TC::testTags(const tag_list_t & tags_in) const{
   }
   return(true);
 }
-std::string TC::printTags(const tag_list_t & tags_in) const{
+std::string TC::printTags(const tag_list_t & tags_in,char separator) const{
   std::string out;
   bool first=true;
   for (const std::string & in : tags_in) {
     if (first){
       first=false;
     } else {
-      out+='-';
+      out+=separator;
     }
     out+=in;
   }
   return(out);
 }
-std::string TC::printTags() const{
-  return(printTags(tags));
+std::string TC::printTags(char separator) const{
+  return(printTags(tags,separator));
 }
 int TC::runThis(const tag_list_t & tags_in) const{
   if (testTags(tags_in)){
@@ -88,6 +88,12 @@ int TC::runThis(const tag_list_t & tags_in) const{
   return(0);
 }
 int TC::run(const tag_list_t & tags_in){
+  if (tags_in.size()) if (tags_in.at(0)=="-"){
+    for (const TC * tc : getList()) {
+      std::cout<<"add_test(NAME "<<tc->printTags('-')<<" COMMAND ${PROJECT_NAME}-test "<<tc->printTags(' ')<<")"<<std::endl;
+    }
+    return(0);
+  }
   for (const TC * tc : getList()) {
     int out=tc->runThis(tags_in);
     if (out) return(out);

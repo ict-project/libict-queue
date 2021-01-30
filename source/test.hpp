@@ -63,11 +63,11 @@ private:
   int line;
   int runThis(const tag_list_t & tags_in) const;
   bool testTags(const tag_list_t & tags_in) const;
-  std::string printTags(const tag_list_t & tags_in) const;
-  std::string printTags() const;
+  std::string printTags(const tag_list_t & tags_in,char separator='-') const;
 public:
   TC(const tag_list_t & tags_in,test_fun_t fun_in,const char * file_in,int line_in);
   static int run(const tag_list_t & tags_in);
+  std::string printTags(char separator='-') const;
 };
 //============================================
 extern const test_string_t test_string;
