@@ -87,7 +87,7 @@ static unsigned char hex2value(char input){
     }
 }
 static std::string encodeCharForPath(char input){
-    static const std::string special("~!$()-_|."); 
+    static const std::string special("()-_|."); 
     std::string output;
     if ((std::isalnum(input))||(special.find(input)!=std::string::npos)){
         output=input;
@@ -159,7 +159,7 @@ void pool::getAllIdsString(std::set<std::string> & output){
             }
         }
         if (tmp.size()){
-            const std::regex r("([a-zA-Z0-9\\%\\~\\!\\$\\(\\)\\-\\_\\|\\.]+)\\.q");
+            const std::regex r("([a-zA-Z0-9\\%\\(\\)\\-\\_\\|\\.]+)\\.q");
             for (const std::string & p : tmp){
                 std::smatch m;
                 if (std::regex_match(p,m,r)) {
@@ -216,7 +216,7 @@ static ict::queue::types::path_t dirpath("/tmp/test-dirpool");
 REGISTER_TEST(dirpool,tc1){
     int out=0;
     std::string test1("qwert1234~!()_|-.@#$%^&*+={}[]\\/?<>,");
-    std::string test2("qwert1234~!()_|-.%40%23$%25%5e%26%2a%2b%3d%7b%7d%5b%5d%5c%2f%3f%3c%3e%2c");
+    std::string test2("qwert1234%7e%21()_|-.%40%23%24%25%5e%26%2a%2b%3d%7b%7d%5b%5d%5c%2f%3f%3c%3e%2c");
     if (out==0){
         std::string tmp=ict::queue::dir::encodeStringForPathLocal(test1);
         if (tmp!=test2){
