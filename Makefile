@@ -13,6 +13,12 @@ uninstall: build/.dir
 test: build/.dir
 	$(MAKE) $(MFLAGS) -C build test
 
+package: build/.dir
+	$(MAKE) $(MFLAGS) -C build package
+
+package_source: build/.dir
+	$(MAKE) $(MFLAGS) -C build package_source
+
 build/.dir:
 	test -d build || ./build.linux.bsh
 	echo > build/.dir
