@@ -159,19 +159,12 @@ std::atomic_size_t & interface::queueSize(){
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
+#include <filesystem>
 
 static ict::queue::types::path_t dirpath("/tmp/test-fileinterface");
 REGISTER_TEST(fileinterface,tc1){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::file::interface iface(dirpath);
         iface.nextWriteStream();
@@ -217,7 +210,7 @@ REGISTER_TEST(fileinterface,tc1){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 #endif

@@ -8,7 +8,7 @@ mkdir build
 cd build
 pwd
 # Release
-cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=Debug -DCPACK_GENERATOR="TZ;TGZ;STGZ;DEB;RPM"
+cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="TZ;TGZ;STGZ;DEB;RPM"
 cd ..
 test -r compile_commands.json || ln -s build/compile_commands.json
 pwd

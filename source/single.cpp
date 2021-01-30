@@ -45,19 +45,12 @@ namespace ict { namespace  queue {
 #ifdef ENABLE_TESTING
 #include "test.hpp"
 #include <chrono>
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
+#include <filesystem>
 
 static ict::queue::types::path_t dirpath("/tmp/test-single");
 REGISTER_TEST(single,tc1){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::single queue(dirpath,100);
         for (size_t i=0;i<ict::test::test_string.size();i++){
@@ -79,12 +72,12 @@ REGISTER_TEST(single,tc1){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(single,tc2){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::single_wstring queue(dirpath,100);
         for (size_t i=0;i<ict::test::test_wstring.size();i++){
@@ -106,12 +99,12 @@ REGISTER_TEST(single,tc2){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(single,tc3){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::single queue(dirpath);
         std::size_t max=1000000;
@@ -131,7 +124,7 @@ REGISTER_TEST(single,tc3){
         std::cout<<"time("<<max<<" writes & "<<max<<" reads)="<<microseconds<<" microseconds"<<std::endl;
         std::cout<<"rate( writes & reads)="<<rate<<" operations/sec"<<std::endl;
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 #endif

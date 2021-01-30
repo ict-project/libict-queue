@@ -40,14 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
+#include <filesystem>
 //============================================
 namespace ict { namespace  queue { namespace  dir {
 //============================================
@@ -150,18 +143,18 @@ std::string pool::decodeStringForPath(const std::string & input){
 ict::queue::types::path_t pool::getPathString(const std::string & id) const{
     ict::queue::types::path_t output;
     output+=dir;
-    output+=fs::path::preferred_separator;
+    output+=std::filesystem::path::preferred_separator;
     output+=id;
     output+=".q";
     return(output);
 }
 void pool::getAllIdsString(std::set<std::string> & output){
-    if (fs::is_directory(dir)){
+    if (std::filesystem::is_directory(dir)){
         ids.clear();
         std::vector<ict::queue::types::path_t> tmp;
-        for(auto& p : fs::directory_iterator(dir)){
-            if (fs::is_directory(p)){
-                fs::path path(p);
+        for(auto& p : std::filesystem::directory_iterator(dir)){
+            if (std::filesystem::is_directory(p)){
+                std::filesystem::path path(p);
                 tmp.emplace_back(path.filename());
             }
         }
@@ -185,13 +178,13 @@ void pool::addString(const std::string & id){
     if (ids.empty()) getAllIdsString(ids);
     if (ids.count(id)) throw std::invalid_argument("ict::queue::dir::pool given id exists!");
     ids.emplace(id);
-    fs::create_directory(getPathString(id));
+    std::filesystem::create_directory(getPathString(id));
 }
 void pool::removeString(const std::string & id){
     if (ids.empty()) getAllIdsString(ids);
     if (!ids.count(id)) throw std::invalid_argument("ict::queue::dir::pool given id doesn't exist!");
     ids.erase(id);
-    fs::remove_all(getPathString(id));
+    std::filesystem::remove_all(getPathString(id));
 }
 bool pool::existsString(const std::string & id){
     if (ids.empty()) getAllIdsString(ids);
@@ -210,7 +203,7 @@ bool pool::empty() {
 void pool::clear(){
     if (ids.empty()) getAllIdsString(ids);
     for (const std::string & s:ids){
-        fs::remove_all(getPathString(s));
+        std::filesystem::remove_all(getPathString(s));
     }
     ids.clear();
 }
@@ -219,15 +212,6 @@ void pool::clear(){
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
-
 static ict::queue::types::path_t dirpath("/tmp/test-dirpool");
 REGISTER_TEST(dirpool,tc1){
     int out=0;
@@ -279,7 +263,7 @@ REGISTER_TEST(dirpool,tc3){
         "sdsds",
         "qwert1234~!()_|-.@#$%^&*+={}[]\\/?<>,"
     }; 
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     if (out==0) {
         ict::queue::dir::pool pool(dirpath);
         if (pool.size()!=0){
@@ -322,7 +306,7 @@ REGISTER_TEST(dirpool,tc3){
             out=6;
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(dirpool,tc4){
@@ -337,7 +321,7 @@ REGISTER_TEST(dirpool,tc4){
         228,
         -23
     }; 
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     if (out==0) {
         ict::queue::dir::pool pool(dirpath);
         if (pool.size()!=0){
@@ -380,7 +364,7 @@ REGISTER_TEST(dirpool,tc4){
             out=6;
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 #endif

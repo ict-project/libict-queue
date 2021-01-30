@@ -137,19 +137,12 @@ void basic::clear(){
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
+#include <filesystem>
 
 static ict::queue::types::path_t dirpath("/tmp/test-basic");
 REGISTER_TEST(basic,tc1){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
         for (size_t i=0;i<ict::test::test_string.size();i++){
@@ -181,12 +174,12 @@ REGISTER_TEST(basic,tc1){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(basic,tc2){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
         for (size_t i=0;i<ict::test::test_string.size();i++){
@@ -229,12 +222,12 @@ REGISTER_TEST(basic,tc2){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(basic,tc3){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
         for (size_t i=0;i<ict::test::test_string.size();i++){
@@ -274,12 +267,12 @@ REGISTER_TEST(basic,tc3){
             out=4;
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(basic,tc4){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath);
         for (size_t i=0;i<ict::test::test_string.size();i++){
@@ -319,12 +312,12 @@ REGISTER_TEST(basic,tc4){
             out=4;
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 REGISTER_TEST(basic,tc5){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     std::size_t half=ict::test::test_string.size()/2;
     {
         ict::queue::basic queue(dirpath,500);
@@ -382,7 +375,7 @@ REGISTER_TEST(basic,tc5){
             }
         }
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 #endif

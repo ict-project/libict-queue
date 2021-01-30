@@ -44,19 +44,12 @@ namespace ict { namespace  queue {
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
-
-#if defined(__cpp_lib_filesystem)
- #include <filesystem>
- namespace fs=std::filesystem;
-#else
- #include <experimental/filesystem>
- namespace fs=std::experimental::filesystem;
-#endif
+#include <filesystem>
 
 static ict::queue::types::path_t dirpath("/tmp/test-pool");
 REGISTER_TEST(pool,tc1){
     int out=0;
-    fs::create_directory(dirpath);
+    std::filesystem::create_directory(dirpath);
     if (out==0){
         ict::queue::pool pool(dirpath);
         if(pool["pierwszy"].size()!=0){
@@ -71,7 +64,7 @@ REGISTER_TEST(pool,tc1){
         pool.erase("pierwszy");
         pool.clear();
     }
-    fs::remove_all(dirpath);
+    std::filesystem::remove_all(dirpath);
     return(out);
 }
 #endif
