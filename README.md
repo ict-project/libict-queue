@@ -7,4 +7,4 @@ See:
 * [pool](source/pool.md) for more details about a pool of single queues.
 
 Releases:
-* [release-v1](tree/release-v1) [![Build Status](https://travis-ci.org/ict-project/libict-queue.svg?branch=release-v1)](https://travis-ci.org/ict-project/libict-queue)
+* [release-v1](/ict-project/libict-queue/tree/release-v1) [![Build Status](https://travis-ci.org/ict-project/libict-queue.svg?branch=release-v1)](https://travis-ci.org/ict-project/libict-queue)
