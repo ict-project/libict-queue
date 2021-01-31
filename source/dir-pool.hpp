@@ -51,20 +51,6 @@ private:
     //! Lista katalogów.
     std::set<std::string> ids;
     //! 
-    //! @brief Koduje string w taki sposób, by można go było użyć w nazwie katalogu.
-    //! 
-    //! @param input String do zakodowania.
-    //! @return Zakodowany string. 
-    //! 
-    static std::string encodeStringForPath(const std::string & input);
-    //! 
-    //! @brief Odkodowuje string z nazwy katalogu.
-    //! 
-    //! @param input Nazwa katalogu do odkodowania.
-    //! @return Odkodowany string.
-    //! 
-    static std::string decodeStringForPath(const std::string & input);
-    //! 
     //! @brief Zamienia ID na string, który można użyć do nazwy katalogu.
     //! 
     //! @param input ID w postaci string.
@@ -208,6 +194,20 @@ public:
     //! @brief Usuwa wszystkie katalogi z puli.
     //! 
     void clear();
+    //! 
+    //! @brief Koduje string w taki sposób, by można go było użyć w nazwie katalogu.
+    //! 
+    //! @param input String do zakodowania.
+    //! @return Zakodowany string. 
+    //! 
+    static std::string encodeStringForPath(const std::string & input);
+    //! 
+    //! @brief Odkodowuje string z nazwy katalogu.
+    //! 
+    //! @param input Nazwa katalogu do odkodowania.
+    //! @return Odkodowany string.
+    //! 
+    static std::string decodeStringForPath(const std::string & input);
 };
 //===========================================
 } } }
