@@ -51,7 +51,7 @@ void clear();
 
 Items that can be stored in the queue may be:
 * `std::string` (then `ict::queue::single` or `ict::queue::single_string` should be used);
-* `std::wstring` (then `ict::queue::single_string` should be used).
+* `std::wstring` (then `ict::queue::single_wstring` should be used).
 
 ## Usage
 ```c
