@@ -33,4 +33,5 @@
 *.kdev4
 build/**
 source/git_version.h
+source/all.hpp
 .vscode

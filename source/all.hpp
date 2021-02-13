@@ -1,5 +1,5 @@
-#ifndef _LIBICT_HEADER
-#define _LIBICT_HEADER
+#ifndef _LIBICT_HEADER_704_12992
+#define _LIBICT_HEADER_704_12992
 #include "basic.hpp"
 #include "dir-pool.hpp"
 #include "file-interface.hpp"
