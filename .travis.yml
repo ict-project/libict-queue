@@ -3,7 +3,7 @@ osx_image: xcode12.2
 sudo: required
 os:
   - linux
-#  - osx
+  - osx
 language:
   - cpp
 compiler:
