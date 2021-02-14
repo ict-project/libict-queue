@@ -24,6 +24,7 @@ script:
   - make
   - make test
   - make package
+  - make package_source
 deploy:
   provider: releases
   api_key: "$GITHUB_API_KEY"

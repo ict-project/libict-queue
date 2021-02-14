@@ -34,7 +34,8 @@ case $OSTYPE in
     cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCPACK_GENERATOR="TZ;TGZ;STGZ;DEB;RPM"
     ;;
   darwin* )
-    cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCPACK_GENERATOR="TZ;TGZ;STGZ" -G Xcode
+    cmake ../source -DCPACK_GENERATOR="TZ;TGZ;STGZ" -G Xcode
+    # xcodebuild -project *.xcodeproj | xcpretty -r json-compilation-database --output compile_commands.json
     echo "# In order to open project run:"
     echo "open build/*.xcodeproj"
     ;;
@@ -44,31 +45,31 @@ case $OSTYPE in
     ;;
 esac
 if [[ ! -r Makefile ]]; then
-    echo > Makefile
-  echo "build:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build ." >> Makefile
-    echo >> Makefile
+  echo > Makefile
+
+  echo "default_target:" >> Makefile
+  printf "\tcmake --build . --config $BUILD_TYPE \n\n" >> Makefile
+
   echo "clean:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target  clean" >> Makefile
-    echo >> Makefile
+  printf "\tcmake --build . --config $BUILD_TYPE --target  clean\n\n" >> Makefile
+
   echo "install:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target  install" >> Makefile
-    echo >> Makefile
+  printf "\tcmake --build . --config $BUILD_TYPE --target  install\n\n" >> Makefile
+
   echo "uninstall:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target  uninstall" >> Makefile
-    echo >> Makefile
+  printf "\tcmake --build . --config $BUILD_TYPE --target  uninstall\n\n" >> Makefile
+
   echo "test:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target test" >> Makefile
-    echo >> Makefile
+  printf "\tctest -C $BUILD_TYPE\n\n" >> Makefile
+
   echo "package:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target package" >> Makefile
-    echo >> Makefile
+  printf "\tcpack -C $BUILD_TYPE\n\n" >> Makefile
+
   echo "package_source:" >> Makefile
-  echo "  cmake -C $BUILD_TYPE --build . --target package_source" >> Makefile
-    echo >> Makefile
-fi 
+  printf "\tcpack -C $BUILD_TYPE --config CPackSourceConfig.cmake\n\n" >> Makefile
+fi
 cd ..
-test -r compile_commands.json || ln -s build/compile_commands.json
+test -r build/compile_commands.json && test -r compile_commands.json || ln -s build/compile_commands.json
 pwd
 echo "# In order to make project run:"
 echo "make"
