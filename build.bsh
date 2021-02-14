@@ -1,0 +1,77 @@
+#!/bin/bash
+###################
+SCRIPT_DIR="$(dirname $(pwd)/$0)"
+BUILD_TYPE="Release"
+###################
+case $1 in
+  d* | D* )
+    BUILD_TYPE="Debug"
+    ;;
+  *)
+    ;;
+esac
+echo "BUILD_TYPE=$BUILD_TYPE" 
+###################
+if ! command -v make &> /dev/null
+then
+    echo "make could not be found!"
+    exit 1
+fi
+if ! command -v cmake &> /dev/null
+then
+    echo "cmake could not be found!"
+    exit 2
+fi
+###################
+cd "$SCRIPT_DIR"
+pwd
+rm -Rf build
+mkdir build
+cd build
+pwd
+case $OSTYPE in
+  linux-gnu* )
+    cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCPACK_GENERATOR="TZ;TGZ;STGZ;DEB;RPM"
+    ;;
+  darwin* )
+    cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCPACK_GENERATOR="TZ;TGZ;STGZ" -G Xcode
+    echo "# In order to open project run:"
+    echo "open build/*.xcodeproj"
+    ;;
+  *)
+    echo "Unknown OSTYPE ($OSTYPE)!"
+    exit 3
+    ;;
+esac
+if [[ ! -r Makefile ]]; then
+    echo > Makefile
+  echo "build:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build ." >> Makefile
+    echo >> Makefile
+  echo "clean:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target  clean" >> Makefile
+    echo >> Makefile
+  echo "install:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target  install" >> Makefile
+    echo >> Makefile
+  echo "uninstall:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target  uninstall" >> Makefile
+    echo >> Makefile
+  echo "test:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target test" >> Makefile
+    echo >> Makefile
+  echo "package:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target package" >> Makefile
+    echo >> Makefile
+  echo "package_source:" >> Makefile
+  echo "  cmake -C $BUILD_TYPE --build . --target package_source" >> Makefile
+    echo >> Makefile
+fi 
+cd ..
+test -r compile_commands.json || ln -s build/compile_commands.json
+pwd
+echo "# In order to make project run:"
+echo "make"
+echo "# In order to test project run:"
+echo "make test"
+###################

@@ -19,17 +19,11 @@ addons:
       - rpm
 install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ] && [ "$CXX" = "g++" ]; then export CXX="g++-9" CC="gcc-9"; fi
-before_script:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then ./build.linux.bsh; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ];   then ./build.xcode.bsh; fi
 script:
   - gcc -v && g++ -v && cmake --version
-  - cd build
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then make; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ];   then xcodebuild -configuration Release; fi
-  - ctest -C Release
-  - cpack
-  - cd ..
+  - make
+  - make test
+  - make package
 deploy:
   provider: releases
   api_key: "$GITHUB_API_KEY"

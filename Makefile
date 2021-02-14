@@ -20,5 +20,5 @@ package_source: build/.dir
 	$(MAKE) $(MFLAGS) -C build package_source
 
 build/.dir:
-	test -d build || ./build.linux.bsh
+	test -d build || ./build.bsh
 	echo > build/.dir
