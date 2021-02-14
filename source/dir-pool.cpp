@@ -159,7 +159,7 @@ void pool::getAllIdsString(std::set<std::string> & output){
             }
         }
         if (tmp.size()){
-            const std::regex r("([a-zA-Z0-9\\%\\(\\)\\-\\_\\|\\.]+)\\.q");
+            const std::regex r(R"regex(([a-zA-Z0-9%\(\)\-_\|\.]+)\.q)regex");
             for (const std::string & p : tmp){
                 std::smatch m;
                 if (std::regex_match(p,m,r)) {
