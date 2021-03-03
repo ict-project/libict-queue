@@ -152,6 +152,25 @@ public:
         dirs.remove(key);
         return(out);
     }
+    //! 
+    //! @brief Zwraca rozmiar puli.
+    //! 
+    //! @return Rozmiar puli.
+    //! 
+    std::size_t size(){
+        std::lock_guard<std::mutex> lock(poolMutex);
+        return(parent_t::size());
+    }
+    //! 
+    //! @brief Zwraca infromację, czy pula jest pusta.
+    //! 
+    //! @return true Pula jest pusta.
+    //! @return false Pula nie jest pusta.
+    //! 
+    bool empty(){
+        std::lock_guard<std::mutex> lock(poolMutex);
+        return(parent_t::empty());
+    }
 };
 typedef pool_template<> pool;
 typedef pool_template<std::string,ict::queue::single_string> pool_string_string;

@@ -48,6 +48,19 @@ typename parent_t::iterator erase(typename parent_t::const_iterator first,typena
 //! @return std :: size_t
 //!
 std::size_t erase(const Key& key);
+//! 
+//! @brief Returns size of the pool.
+//! 
+//! @return Size of the pool.
+//! 
+std::size_t size();
+//! 
+//! @brief Returns true if pool is empty.
+//! 
+//! @return true The pool is empty.
+//! @return false The pool is not empty.
+//! 
+bool empty();
 ```
 
 ## Key
