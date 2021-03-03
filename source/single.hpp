@@ -52,6 +52,7 @@ private:
     //! Mutex dla odczytu.
     std::mutex readMutex;
 public:
+    typedef Container container_t;
     //! 
     //! @brief Konstruktor kolejki.
     //! 

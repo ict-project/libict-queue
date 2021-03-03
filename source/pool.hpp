@@ -62,6 +62,10 @@ private:
     const std::size_t max_file_size;
     const std::size_t max_files;
 public:
+    typedef Key key_t;
+    typedef Value value_t;
+    typedef Compare compare_t;
+    typedef Allocator allocator_t;
     //! 
     //! @brief Konstruktor puli kolejek.
     //! 
