@@ -131,8 +131,20 @@ void pool::idToString(const std::string & input,std::string & output){
     if (input.size()==0) throw std::invalid_argument("ict::queue::dir::pool id too short!");
     output=encodeStringForPath(input);
 }
+void pool::idToString(const char & input,std::string & output){
+    output=encodeCharForPath(input);
+}
+void pool::idToString(const unsigned char & input,std::string & output){
+    output=encodeCharForPath(input);
+}
 void pool::idFromString(const std::string & input,std::string & output){
     output=decodeStringForPath(input);
+}
+void pool::idFromString(const std::string & input,char & output){
+    output=decodeCharForPath(input);
+}
+void pool::idFromString(const std::string & input,unsigned char & output){
+    output=decodeCharForPath(input);
 }
 std::string pool::encodeStringForPath(const std::string & input){
     return(encodeStringForPathLocal(input));

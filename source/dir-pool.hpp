@@ -70,6 +70,8 @@ private:
     //! @param input ID w postaci numeru.
     //! @param output String wyjściowy.
     //! 
+    static void idToString(const char & input,std::string & output);
+    static void idToString(const unsigned char & input,std::string & output);
     template <typename Identifier> static void idToString(const Identifier & input,std::string & output){
         std::stringstream stream;
         stream<<input;
@@ -81,6 +83,8 @@ private:
     //! @param input String wejściowy.
     //! @param output ID w postaci numeru.
     //! 
+    static void idFromString(const std::string & input,char & output);
+    static void idFromString(const std::string & input,unsigned char & output);
     template <typename Identifier> static void idFromString(const std::string & input,Identifier & output){
         std::stringstream stream;
         stream<<input;
