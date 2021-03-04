@@ -19,6 +19,7 @@ set(CMAKE_SOURCE_FILES
   single.cpp
   dir-pool.cpp
   pool.cpp
+  prioritized.cpp
 )
 
 add_library(ict-static STATIC ${CMAKE_SOURCE_FILES})
@@ -82,6 +83,11 @@ add_test(NAME ict-dirpool-tc2 COMMAND ${PROJECT_NAME}-test ict dirpool tc2)
 add_test(NAME ict-dirpool-tc3 COMMAND ${PROJECT_NAME}-test ict dirpool tc3)
 add_test(NAME ict-dirpool-tc4 COMMAND ${PROJECT_NAME}-test ict dirpool tc4)
 add_test(NAME ict-pool-tc1 COMMAND ${PROJECT_NAME}-test ict pool tc1)
+add_test(NAME ict-prioritized-tc1 COMMAND ${PROJECT_NAME}-test ict prioritized tc1)
+add_test(NAME ict-prioritized-tc2 COMMAND ${PROJECT_NAME}-test ict prioritized tc2)
+add_test(NAME ict-prioritized-tc3 COMMAND ${PROJECT_NAME}-test ict prioritized tc3)
+add_test(NAME ict-prioritized-tc4 COMMAND ${PROJECT_NAME}-test ict prioritized tc4)
+add_test(NAME ict-prioritized-tc5 COMMAND ${PROJECT_NAME}-test ict prioritized tc5)
 
 ################################################################
 #set(CPACK_GENERATOR "TZ;TGZ;STGZ;DEB;RPM") # Linux

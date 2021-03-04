@@ -4,7 +4,8 @@ This code implements a queue that is stored entirely in files. New elements are 
 
 See:
 * [single](source/single.md) for more details about a single queue;
-* [pool](source/pool.md) for more details about a pool of single queues.
+* [pool](source/pool.md) for more details about a pool of single queues;
+* [prioritized](source/prioritized.md) for more details about a prioritized queue (since v1.2).
 
 Releases:
 * Branch release-v1 [![Build Status](https://travis-ci.org/ict-project/libict-queue.svg?branch=release-v1)](https://travis-ci.org/ict-project/libict-queue)
