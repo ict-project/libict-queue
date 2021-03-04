@@ -132,19 +132,19 @@ void pool::idToString(const std::string & input,std::string & output){
     output=encodeStringForPath(input);
 }
 void pool::idToString(const char & input,std::string & output){
-    output=encodeCharForPath(input);
+    output=std::to_string((unsigned char)input);
 }
 void pool::idToString(const unsigned char & input,std::string & output){
-    output=encodeCharForPath(input);
+    output=std::to_string((unsigned char)input);
 }
 void pool::idFromString(const std::string & input,std::string & output){
     output=decodeStringForPath(input);
 }
 void pool::idFromString(const std::string & input,char & output){
-    output=decodeCharForPath(input);
+    output=(char)std::stoul(input);
 }
 void pool::idFromString(const std::string & input,unsigned char & output){
-    output=decodeCharForPath(input);
+    output=(unsigned char)std::stoul(input);
 }
 std::string pool::encodeStringForPath(const std::string & input){
     return(encodeStringForPathLocal(input));
