@@ -10,9 +10,21 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(Threads)
 
-add_custom_command(OUTPUT all.hpp PRE_BUILD COMMAND ./all.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/info.hpp ${CMAKE_CURRENT_SOURCE_DIR}/info.cpp 
+  PRE_BUILD COMMAND ./info.sh ${LIBRARY_NAME} 
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/all.hpp 
+  PRE_BUILD COMMAND ./all.sh 
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/info.hpp 
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 set(CMAKE_SOURCE_FILES 
+  info.cpp
   file-pool.cpp
   file-interface.cpp
   basic.cpp
@@ -50,8 +62,6 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
 else(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
  set(GIT_VERSION unknown)
 endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/git_version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/git_version.h @ONLY)
 
 file(GLOB HEADER_LIST . *.hpp)
 

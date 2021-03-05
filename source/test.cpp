@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
 //============================================
 #include "test.hpp"
-#include "git_version.h"
 #include "all.hpp"
 #include <algorithm>
 //============================================
