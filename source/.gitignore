@@ -1,2 +1,3 @@
-git_version.h
 all.hpp
+info.hpp
+info.cpp
