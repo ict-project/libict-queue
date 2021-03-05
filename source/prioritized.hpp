@@ -43,6 +43,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace ict { namespace  queue { 
 //===========================================
 template<class Queue=ict::queue::single_template<>> class prioritized_template {
+private:
+    //! Mutex.
+    std::mutex prioritizedMutex;
 public:
     typedef typename Queue::container_t container_t;
     typedef unsigned char priority_t;
@@ -67,6 +70,7 @@ public:
     //! @param p Priorytet (od 0 - najniższy, do 255 - najwyższy).
     //! 
     template <typename ... Args> void push(const container_t & c,const priority_t & p,Args ... a){
+        std::lock_guard<std::mutex> lock(prioritizedMutex);
         q[p].push(c,a...);
     }
     //! 
@@ -76,6 +80,7 @@ public:
     //! @param p Priorytet (od 0 - najniższy, do 255 - najwyższy).
     //! 
     template <typename ... Args> void pop(container_t & c,priority_t & p,Args ... a){
+        std::lock_guard<std::mutex> lock(prioritizedMutex);
         for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it){
             if (!it->second.empty()){
                 it->second.pop(c,a...);
@@ -92,6 +97,7 @@ public:
     //! @return Rozmiar kolejki.
     //! 
     std::size_t size(){
+        std::lock_guard<std::mutex> lock(prioritizedMutex);
         std::size_t s=0;
         for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it) s+=it->second.size();
         return(s);
@@ -103,6 +109,7 @@ public:
     //! @return false Nie jest pusta.
     //! 
     bool empty(){
+        std::lock_guard<std::mutex> lock(prioritizedMutex);
         for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it) 
             if (!it->second.empty()) 
                 return(false);
@@ -111,7 +118,10 @@ public:
     //! 
     //! @brief Czyści kolejkę.
     //! 
-    void clear(){q.clear();}
+    void clear(){
+        std::lock_guard<std::mutex> lock(prioritizedMutex);
+        q.clear();
+    }
 };
 typedef prioritized_template<> prioritized;
 typedef prioritized_template<single_template<std::string>> prioritized_string;
