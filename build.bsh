@@ -34,7 +34,7 @@ case $OSTYPE in
     cmake ../source -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCPACK_GENERATOR="TZ;TGZ;STGZ;DEB;RPM"
     ;;
   darwin* )
-    cmake ../source -DCPACK_GENERATOR="TZ;TGZ;STGZ" -G Xcode
+    cmake ../source -DCPACK_GENERATOR="TZ;TGZ;STGZ" -G Xcode -T buildsystem=1
     # xcodebuild -project *.xcodeproj | xcpretty -r json-compilation-database --output compile_commands.json
     echo "# In order to open project run:"
     echo "open build/*.xcodeproj"
