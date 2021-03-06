@@ -7,6 +7,7 @@ set(LIBRARY_DESC "Library with queue service.")
 project(libict-${LIBRARY_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_XCODE_BUILD_SYSTEM 1)
 
 find_package(Threads)
 
@@ -63,9 +64,6 @@ else(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
  set(GIT_VERSION unknown)
 endif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
 
-if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0") 
-  set(CMAKE_XCODE_BUILD_SYSTEM 1)
-endif()
 
 file(GLOB HEADER_LIST . *.hpp)
 
