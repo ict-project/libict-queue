@@ -1,11 +1,10 @@
 //! @file
 //! @brief File interface module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,8 +45,6 @@ namespace ict { namespace  queue { namespace  file {
 //===========================================
 class interface {
 private:
-    //! Informacja, czy pozycja odczytu została zainicjowana.
-    bool readyRead=false;
     //! Informacja, czy rozmiar kolejki został zainicjowany.
     bool readySize=false;
     //! Aktualny rozmiar kolejki.
@@ -83,7 +80,7 @@ public:
     //! @param dirname Ścieżka do katalogu z plikami.
     //! @param max Maksymalna liczba plików w puli.
     //! 
-    interface(const ict::queue::types::path_t & dirname,const std::size_t & maxFiles=0xffffffff);
+    interface(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff);
     //! 
     //! @brief Zwraca plik (strumień) do zapisu.
     //! 
@@ -131,6 +128,10 @@ public:
     //! @return Aktualny rozmiar kolejki. 
     //! 
     std::atomic_size_t & queueSize();
+    //! 
+    //! @brief Sprawdza, czy interfejs wymaga przeładowania i przeładowuje, jeśli jest to potrzebne. 
+    //! 
+    bool refresh();
 };
 //===========================================
 } } }

@@ -35,7 +35,9 @@ set(CMAKE_SOURCE_FILES
   file-interface.cpp
   basic.cpp
   single.cpp
+  dir-lock.cpp
   dir-pool.cpp
+  dir-singleton.cpp
   pool.cpp
   prioritized.cpp
 )
@@ -51,6 +53,21 @@ set_target_properties(ict-shared  PROPERTIES OUTPUT_NAME ict-${LIBRARY_NAME})
 add_executable(${PROJECT_NAME}-test all.hpp test.cpp ${CMAKE_SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME}-test ${CMAKE_THREAD_LIBS_INIT})
 target_compile_definitions(${PROJECT_NAME}-test PUBLIC -DENABLE_TESTING)
+
+add_executable(${PROJECT_NAME}-single-push single-push.cpp ${CMAKE_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}-single-push ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(${PROJECT_NAME}-single-pop single-pop.cpp ${CMAKE_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}-single-pop ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(${PROJECT_NAME}-single-size single-size.cpp ${CMAKE_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}-single-size ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(${PROJECT_NAME}-single-empty single-empty.cpp ${CMAKE_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}-single-empty ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(${PROJECT_NAME}-single-clear single-clear.cpp ${CMAKE_SOURCE_FILES})
+target_link_libraries(${PROJECT_NAME}-single-clear ${CMAKE_THREAD_LIBS_INIT})
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../.git)
   find_package(Git)
@@ -95,6 +112,8 @@ add_test(NAME ict-basic-tc5 COMMAND ${PROJECT_NAME}-test ict basic tc5)
 add_test(NAME ict-single-tc1 COMMAND ${PROJECT_NAME}-test ict single tc1)
 add_test(NAME ict-single-tc2 COMMAND ${PROJECT_NAME}-test ict single tc2)
 add_test(NAME ict-single-tc3 COMMAND ${PROJECT_NAME}-test ict single tc3)
+add_test(NAME ict-single-tc4 COMMAND ${PROJECT_NAME}-test ict single tc4)
+add_test(NAME ict-dir_lock-tc1 COMMAND ${PROJECT_NAME}-test ict dir_lock tc1)
 add_test(NAME ict-dirpool-tc1 COMMAND ${PROJECT_NAME}-test ict dirpool tc1)
 add_test(NAME ict-dirpool-tc2 COMMAND ${PROJECT_NAME}-test ict dirpool tc2)
 add_test(NAME ict-dirpool-tc3 COMMAND ${PROJECT_NAME}-test ict dirpool tc3)
@@ -105,6 +124,8 @@ add_test(NAME ict-prioritized-tc2 COMMAND ${PROJECT_NAME}-test ict prioritized t
 add_test(NAME ict-prioritized-tc3 COMMAND ${PROJECT_NAME}-test ict prioritized tc3)
 add_test(NAME ict-prioritized-tc4 COMMAND ${PROJECT_NAME}-test ict prioritized tc4)
 add_test(NAME ict-prioritized-tc5 COMMAND ${PROJECT_NAME}-test ict prioritized tc5)
+
+add_test(NAME single-test-bash COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/single-test.sh ./${PROJECT_NAME}-single-push ./${PROJECT_NAME}-single-pop)
 
 ################################################################
 #set(CPACK_GENERATOR "TZ;TGZ;STGZ;DEB;RPM") # Linux

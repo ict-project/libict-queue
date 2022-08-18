@@ -1,11 +1,10 @@
 //! @file
 //! @brief Queue pool module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,139 +38,323 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <map>
 #include <mutex>
+#include <functional>
+#include <memory>
 #include "types.hpp"
 #include "dir-pool.hpp"
+#include "dir-lock.hpp"
 #include "single.hpp"
 //============================================
 namespace ict { namespace  queue { 
 //===========================================
 //! Pula kolejek
-template<
-    class Key=std::string,
-    class Value=ict::queue::single,
-    class Compare=std::less<Key>,
-    class Allocator=std::allocator<std::pair<const Key,Value>>
-> class pool_template:public std::map<Key,Value,Compare,Allocator>{
-private:
-    //! Mutex.
-    std::mutex poolMutex;
-    typedef std::map<Key,Value,Compare,Allocator> parent_t;
-    //! Pula katalogów
-    ict::queue::dir::pool dirs;
-    //! Maksymalny 
-    const std::size_t max_file_size;
-    const std::size_t max_files;
+template <typename Identifier=std::size_t,class Queue=ict::queue::single> 
+class pool_template {
 public:
-    typedef Key key_t;
-    typedef Value value_t;
-    typedef Compare compare_t;
-    typedef Allocator allocator_t;
-    //! 
-    //! @brief Konstruktor puli kolejek.
-    //! 
-    //! @param dirname Ścieżka do katalogu z kolejkami (podkatalogi).
-    //! @param maxFileSize Maksymalny rozmiar pliku, po przekroczeniu którego tworzony jest nowy plik w pojedynczej kolejce.
-    //! @param maxFiles Maksymalna liczba plików w puli w pojedynczej kolejce.
-    //! 
+    typedef Identifier identifier_t;
+    typedef typename Queue::container_t container_t;
+    typedef Queue queue_t;
+    typedef std::unique_ptr<Queue> queue_ptr_t;
+    typedef std::map<Identifier,queue_ptr_t> queues_t;
+    class queue_info_t{
+    private:
+        dir::lockable & dirlock;
+        dir::lockable::hash hash;
+        //! Zmiana w puli katalogów.
+        bool dirs_change=false;
+    public:
+        //! Maksymalny rozmiar pliku, po przekroczeniu którego utwprzony zostaje nowy plik.
+        const std::size_t max_file_size;
+        //! Maksymalna liczba plików.
+        const std::size_t max_files;
+        //! Pula katalogów
+        ict::queue::dir::pool dirs;
+        //! Lista obiektów obsługujących kolejki.
+        queues_t queues;
+        //! Identyfikator, który ma być użyty.
+        identifier_t id;
+        //! Rozmiar kolejki, który ma zostać zwrócony.
+        std::size_t size;
+        //! Konstruktor.
+        queue_info_t(dir::lockable & dl,const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff):
+            dirlock(dl),dirs(dirname),max_file_size(maxFileSize),max_files(maxFiles){
+        }
+        //! 
+        //! @brief Dodaje nową kolejkę do puli (jeśli jeszcze nie istnieje).
+        //! 
+        //! @param i Identyfikator kolejki w puli.
+        //! 
+        void addQueue(const Identifier & i){
+            if (!dirs.exists(i)) {
+                dirs.add(i);
+                dirs_change=true;
+            }
+            if (!queues.count(i)) {
+                queues[i].reset(new Queue(dirs.getPath(i),max_file_size,max_files));
+            }
+        }
+        //! 
+        //! @brief Usuwa kolejkę z puli (jeśli istnieje).
+        //! 
+        //! @param i Identyfikator kolejki w puli.
+        //! 
+        void removeQueue(const Identifier & i){
+            if (queues.count(i)) {
+                queues.erase(i);
+                dirs_change=true;
+            }
+            if (dirs.exists(i)) {
+                dirs.remove(i);
+            }
+        }
+        std::set<identifier_t> ids;
+        void getAllIds(){
+            if (hashChange()) dirs.getAllIds(ids);
+        }
+        void hashCalc(){
+            std::hash<identifier_t> h; 
+            hash.size=ids.size();
+            hash.hash=1;
+            for (const identifier_t & i : ids) {
+                hash.hash=h(i);
+            }
+        }
+        bool hashChange(){
+            dir::lockable::hash read_hash;
+            dirlock.readHash(read_hash);
+            return (hash.hash!=read_hash.hash)||(hash.size!=read_hash.size);
+        }
+        void beforeChange(){
+            dirs_change=false;
+        }
+        void afterChange(){
+            if (dirs_change){
+                dirs.getAllIds(ids);
+                hashCalc();
+                dirlock.writeHash(hash);
+            }
+        }
+    };
+    typedef std::function<void(queue_info_t &)> exec_fun_t;
+protected:
+    class _pool_template {
+    private:
+        //! Mutex.
+        std::mutex poolMutex;
+        //! Blokowanie katalogu
+        dir::lockable dirlock;
+        queue_info_t qi;
+    public:
+        _pool_template(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff):
+            dirlock(dirname),qi(dirlock,dirname,maxFileSize,maxFiles){
+        }
+        //! 
+        //! @brief Dodaje element do kolejki w puli.
+        //! 
+        //! @param c Element do dodania.
+        //! @param fun Funkcja wykonawcza (wykonywana przed zwróceniem wartości).
+        //! 
+        template<typename ... Args> void push(const container_t & c,const exec_fun_t & fun, Args ... args){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            qi.beforeChange();
+            fun(qi);
+            qi.addQueue(qi.id);
+            qi.queues[qi.id]->push(c,args ...);
+            qi.afterChange();
+        }
+        //! 
+        //! @brief Usuwa element z kolejki w puli.
+        //! 
+        //! @param c Element usunięty z kolejki.
+        //! @param fun Funkcja wykonawcza (wykonywana przed zwróceniem wartości).
+        //! 
+        template<typename ... Args> void pop(container_t & c,const exec_fun_t & fun, Args ... args){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            qi.beforeChange();
+            fun(qi);
+            if (!qi.dirs.exists(qi.id)) throw std::underflow_error("Queue is empty in ict::queue::pool!");
+            qi.addQueue(qi.id);
+            qi.queues[qi.id]->pop(c,args ...);
+            if (qi.queues[qi.id]->empty(args ...)){
+                qi.removeQueue(qi.id);
+            }
+            qi.afterChange();
+        }
+        //! 
+        //! @brief Zwraca aktualny rozmiar kolejki w puli.
+        //! 
+        //! @param fun Funkcja wykonawcza (wykonywana przed zwróceniem wartości).
+        //! @return Rozmiar kolejki.
+        //! 
+        template<typename ... Args> std::size_t size(const exec_fun_t & fun, Args ... args){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            fun(qi);
+            return qi.size;
+        }
+        //! 
+        //! @brief Sprawdza, czy kolejka w puli jest pusta.
+        //! 
+        //! @param fun Funkcja wykonawcza (wykonywana przed zwróceniem wartości).
+        //! @return true Jest pusta.
+        //! @return false Nie jest pusta.
+        //! 
+        template<typename ... Args> bool empty(const exec_fun_t & fun, Args ... args){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            fun(qi);
+            return qi.size==0;
+        }
+        //! 
+        //! @brief Czyści kolejkę w puli.
+        //! 
+        //! @param i Identyfikator kolejki w puli.
+        //!
+        template<typename ... Args> void clear(const exec_fun_t & fun, Args ... args){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            qi.beforeChange();
+            fun(qi);
+            qi.removeQueue(qi.id);
+            qi.afterChange();
+        }
+        //! 
+        //! @brief Zwraca aktualny rozmiar całej puli kolejek.
+        //! 
+        //! @return Rozmiar puli kolejek.
+        //! 
+        std::size_t size(){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            std::size_t out=0;
+            qi.getAllIds();
+            for (const identifier_t & i : qi.ids) {
+                qi.addQueue(i);
+                out+=qi.queues[i]->size();
+            }
+            return out;
+        }
+        //! 
+        //! @brief Sprawdza, czy pula kolejek jest pusta.
+        //! 
+        //! @return true Jest pusta.
+        //! @return false Nie jest pusta.
+        //! 
+        bool empty(){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            qi.getAllIds();
+            for (const identifier_t & i : qi.ids) {
+                qi.addQueue(i);
+                if (!qi.queues[i]->empty()) return false;
+            }
+            return true;
+        }
+        //! 
+        //! @brief Czyści całą pulę.
+        //! 
+        void clear(){
+            std::lock_guard<std::mutex> lock(poolMutex);
+            std::lock_guard<dir::lockable> dlock(dirlock);
+            qi.beforeChange();
+            qi.queues.clear();
+            qi.dirs.clear();
+            qi.afterChange();
+        }
+    };
+    dir::singleton<_pool_template,std::size_t,std::size_t> _pt;
+public:
     pool_template(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff):
-        dirs(dirname),max_file_size(maxFileSize),max_files(maxFiles){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        std::set<Key> keys;
-        dirs.getAllIds(keys);
-        for (const Key & k:keys) {
-            parent_t::emplace(
-                std::piecewise_construct,
-                std::forward_as_tuple(k),
-                std::forward_as_tuple(dirs.getPath(k),max_file_size,max_files)
-            );
-        }
-    }
-    pool_template():dirs("/tmp/invalid_argument"),max_file_size(0),max_files(0){
-        throw std::invalid_argument("ict::queue::pool constructor should have arguments!");
+        _pt(dirname,maxFileSize,maxFiles){
     }
     //! 
-    //! @brief Operator dostępu do elementów. Jeśli element nie istnieje, to zostanie utworzony.
+    //! @brief Dodaje element do kolejki w puli.
     //! 
-    //! @param k ID elementu.
-    //! @return Referencja do elementu.
+    //! @param c Element do dodania.
+    //! @param i Identyfikator kolejki w puli.
     //! 
-    Value & operator[](const Key & k){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        if (!parent_t::count(k)){
-            dirs.add(k);
-            parent_t::emplace(
-                std::piecewise_construct,
-                std::forward_as_tuple(k),
-                std::forward_as_tuple(dirs.getPath(k),max_file_size,max_files)
-            );
-        }
-        return(parent_t::operator[](k));
+    template<typename ... Args> void push(const container_t & c,const Identifier & i, Args ... args){
+        _pt().push(c,[&](queue_info_t & _qi){_qi.id=i;},args ...);
     }
     //! 
-    //! @brief Kasuje wszystkie elemenyty puli.
+    //! @brief Usuwa element z kolejki w puli.
     //! 
-    void clear(){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        parent_t::clear();
-        dirs.clear();
+    //! @param c Element usunięty z kolejki.
+    //! @param i Identyfikator kolejki w puli.
+    //! 
+    template<typename ... Args> void pop(container_t & c,const Identifier & i, Args ... args){
+        _pt().pop(c,[&](queue_info_t & _qi){_qi.id=i;},args ...);
     }
     //! 
-    //! @brief Kasuje jeden element puli.
+    //! @brief Zwraca aktualny rozmiar kolejki w puli.
     //! 
-    //! @param pos Wskazanie elementu poprzez iterator.
-    //! @return parent_t::iterator 
+    //! @param i Identyfikator kolejki w puli.
+    //! @return Rozmiar kolejki.
     //! 
-    typename parent_t::iterator erase(typename parent_t::const_iterator pos){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        typename parent_t::iterator out=parent_t::erase(pos);
-        dirs.remove(pos->first);
-        return(out);
+    template<typename ... Args> std::size_t size(const Identifier & i, Args ... args){
+        return _pt().size([&](queue_info_t & _qi){
+            _qi.id=i;
+            if (_qi.dirs.exists(_qi.id)) {
+                _qi.addQueue(_qi.id);
+                _qi.size=_qi.queues[_qi.id]->size(args ...);
+            } else {
+                _qi.size=0;
+            }
+        },args ...);
     }
     //! 
-    //! @brief Kasuje wiele kolejnych elementów puli.
+    //! @brief Sprawdza, czy kolejka w puli jest pusta.
     //! 
-    //! @param first Wskazanie pierwszego elementu poprzez iterator.
-    //! @param last Wskazanie ostatniego elementu poprzez iterator.
-    //! @return parent_t::iterator 
+    //! @param i Identyfikator kolejki w puli.
+    //! @return true Jest pusta.
+    //! @return false Nie jest pusta.
     //! 
-    typename parent_t::iterator erase(typename parent_t::const_iterator first,typename parent_t::const_iterator last){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        typename parent_t::iterator out=parent_t::erase(first,last);
-        for (typename parent_t::const_iterator it=first;it<last;++it) dirs.remove(it->first);
-        return(out);
+    template<typename ... Args> bool empty(const Identifier & i, Args ... args){
+        return _pt().empty([&](queue_info_t & _qi){
+            _qi.id=i;
+            if (_qi.dirs.exists(_qi.id)) {
+                _qi.addQueue(_qi.id);
+                _qi.size=_qi.queues[_qi.id]->size(args ...);
+            } else {
+                _qi.size=0;
+            }
+        },args ...);
     }
     //! 
-    //! @brief Kasuje jeden element puli.
+    //! @brief Czyści kolejkę w puli.
     //! 
-    //! @param key ID elementu.
-    //! @return std::size_t 
-    //! 
-    std::size_t erase(const Key& key){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        std::size_t out=parent_t::erase(key);
-        dirs.remove(key);
-        return(out);
+    //! @param i Identyfikator kolejki w puli.
+    //!
+    template<typename ... Args> void clear(const Identifier & i, Args ... args){
+        _pt().clear([&](queue_info_t & _qi){_qi.id=i;},args ...);
     }
     //! 
-    //! @brief Zwraca rozmiar puli.
+    //! @brief Zwraca aktualny rozmiar całej puli kolejek.
     //! 
-    //! @return Rozmiar puli.
+    //! @return Rozmiar puli kolejek.
     //! 
     std::size_t size(){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        return(parent_t::size());
+        return _pt().size();
     }
     //! 
-    //! @brief Zwraca infromację, czy pula jest pusta.
+    //! @brief Sprawdza, czy pula kolejek jest pusta.
     //! 
-    //! @return true Pula jest pusta.
-    //! @return false Pula nie jest pusta.
+    //! @return true Jest pusta.
+    //! @return false Nie jest pusta.
     //! 
     bool empty(){
-        std::lock_guard<std::mutex> lock(poolMutex);
-        return(parent_t::empty());
+        return _pt().empty();
+    }
+    //! 
+    //! @brief Czyści całą pulę.
+    //! 
+    void clear(){
+        _pt().clear();
     }
 };
+
 typedef pool_template<> pool;
 typedef pool_template<std::string,ict::queue::single_string> pool_string_string;
 typedef pool_template<std::string,ict::queue::single_wstring> pool_string_wstring;

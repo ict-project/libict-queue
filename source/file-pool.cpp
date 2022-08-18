@@ -1,11 +1,10 @@
 //! @file
 //! @brief File pool module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,24 +43,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================
 namespace ict { namespace  queue { namespace  file {
 //============================================
-pool::pool(const ict::queue::types::path_t & dirname,const std::size_t & max):dir(dirname),maxSize(max){
-    loadFileList();
+pool::pool(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize,const std::size_t & maxFiles):
+    dir(dirname),max_files(maxFiles),max_file_size(maxFileSize){
+        refresh();
 }
 const ict::queue::types::path_t & pool::getPath(const std::size_t & index) const{
-    if (index<list.size()) return(list.at(index).path);
+    if (index<list.size()) return list.at(index).path;
     throw std::out_of_range("ict::queue::file::pool out of range!");
 }
 std::size_t pool::size() const {
-    return(list.size());
+    return list.size();
 }
 bool pool::empty() const {
-    return(list.empty());
+    return list.empty();
 }
 void pool::pushFront(){
     if (std::filesystem::is_directory(dir)){
         item_t i;
-        if (list.empty()) loadFileList();
-        if (maxSize<=list.size()) throw std::overflow_error("ict::queue::file::pool max size exceeded!");
+        if (max_files<=list.size()) throw std::overflow_error("ict::queue::file::pool max size exceeded!");
         i.number=0;
         if (!list.empty()) {
             i.number=list.at(0).number;
@@ -76,7 +75,6 @@ void pool::pushFront(){
 }
 void pool::popBack(){
     if (std::filesystem::is_directory(dir)){
-        if (list.empty()) loadFileList();
         if (!list.empty()){
             removeFile(list.back().path);
             list.pop_back();
@@ -89,7 +87,6 @@ void pool::popBack(){
 }
 void pool::clear(){
     if (std::filesystem::is_directory(dir)){
-        if (list.empty()) loadFileList();
         while(!list.empty()){
             removeFile(list.back().path);
             list.pop_back();
@@ -103,19 +100,20 @@ ict::queue::types::path_t pool::getPathString(pool::number_t n) const{
     stream<<dir<<std::filesystem::path::preferred_separator;
     stream<<std::hex<<std::noshowbase<<std::setfill('0')<<std::setw(sizeof(number_t)*2)<<n;
     stream<<".dat";
-    return(stream.str());
+    return stream.str();
 }
 std::string pool::getRegexString() const{
     std::stringstream stream;
     stream<<"([0123456789abcdef]{";
     stream<<std::dec<<std::noshowbase<<(sizeof(number_t)*2);
     stream<<"})\\.dat";
-    return(stream.str());
+    return stream.str();
 }
 void pool::loadFileList(){
     std::vector<ict::queue::types::path_t> tmp1;
     std::map<number_t,ict::queue::types::path_t> tmp2;
     number_t tmp3;
+    list.clear();
     if (std::filesystem::is_directory(dir)){
         for(auto& p: std::filesystem::directory_iterator(dir)){
             if (std::filesystem::is_regular_file(p)){
@@ -157,6 +155,26 @@ void pool::createFile(const ict::queue::types::path_t & path) const {
 void pool::removeFile(const ict::queue::types::path_t & path) const {
     std::filesystem::remove(path);
 }
+bool pool::refresh(){
+    if (list.empty()) {
+        loadFileList();
+        return true;
+    } else {
+        if (!std::filesystem::exists(list.back().path)){
+            loadFileList();
+            return true;
+        }
+        if (!std::filesystem::exists(list.front().path)){
+            loadFileList();
+            return true;
+        }
+        if (max_file_size<std::filesystem::file_size(list.front().path)){
+            loadFileList();
+            return true;
+        }
+    }
+    return false;
+}
 //===========================================
 } } }
 //===========================================
@@ -170,6 +188,7 @@ static void test_createFile(const ict::queue::types::path_t & path) {
 }
 REGISTER_TEST(filepool,tc1){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::file::pool pool(dirpath);
@@ -186,10 +205,11 @@ REGISTER_TEST(filepool,tc1){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(filepool,tc2){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::file::pool pool(dirpath);
@@ -205,10 +225,11 @@ REGISTER_TEST(filepool,tc2){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(filepool,tc3){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::file::pool pool(dirpath);
@@ -234,10 +255,11 @@ REGISTER_TEST(filepool,tc3){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(filepool,tc4){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::file::pool pool(dirpath);
@@ -261,12 +283,13 @@ REGISTER_TEST(filepool,tc4){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(filepool,tc5){
     int out=0;
     ict::queue::types::path_t f1(dirpath);
     ict::queue::types::path_t f2(dirpath);
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     f1+=std::filesystem::path::preferred_separator;
     f1+="00000000000000f0.dat";
@@ -298,12 +321,13 @@ REGISTER_TEST(filepool,tc5){
         }   
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(filepool,tc6){
     int out=0;
     ict::queue::types::path_t f1(dirpath);
     ict::queue::types::path_t f2(dirpath);
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     f1+=std::filesystem::path::preferred_separator;
     f1+="fffffffffffffffd.dat";
@@ -335,7 +359,7 @@ REGISTER_TEST(filepool,tc6){
         }   
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 #endif
 //===========================================

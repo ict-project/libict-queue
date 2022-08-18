@@ -1,10 +1,10 @@
 //! @file
-//! @brief Queue pool module - Source file.
+//! @brief Directory singleton module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @date 2012-2022
+//! @date 2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,35 +33,22 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
 //============================================
-#include "pool.hpp"
+#include "dir-singleton.hpp"
+#include <filesystem>
 //============================================
-namespace ict { namespace  queue { 
+namespace ict { namespace  queue { namespace  dir {
 //============================================
-
+bool equivalent(const ict::queue::types::path_t & lhs,const ict::queue::types::path_t & rhs) noexcept{
+    std::filesystem::path l(lhs);
+    std::filesystem::path r(rhs);
+    return std::filesystem::equivalent(l,r);
+}
 //===========================================
-} }
+} } }
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
 #include <filesystem>
 
-static ict::queue::types::path_t dirpath("/tmp/test-pool");
-REGISTER_TEST(pool,tc1){
-    int out=0;
-    std::filesystem::remove_all(dirpath);
-    std::filesystem::create_directory(dirpath);
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        if(pool.size("pierwszy")!=0){
-            out=1;
-        }
-    }
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        pool.clear("pierwszy");
-    }
-    std::filesystem::remove_all(dirpath);
-    return(out);
-}
 #endif
 //===========================================

@@ -1,11 +1,10 @@
 //! @file
 //! @brief Prioritized queue module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -42,85 +41,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================
 namespace ict { namespace  queue { 
 //===========================================
-template<class Queue=ict::queue::single_template<>> class prioritized_template {
-private:
-    //! Mutex.
-    std::mutex prioritizedMutex;
+template<class Queue=ict::queue::single_template<>> class prioritized_template : public pool_template<unsigned char,Queue> {
 public:
+    typedef pool_template<unsigned char,Queue> parent_t;
     typedef typename Queue::container_t container_t;
     typedef unsigned char priority_t;
-    typedef ict::queue::pool_template<priority_t,Queue> pool_t;
-    pool_t q;
-    //! 
-    //! @brief Konstruktor kolejki.
-    //! 
-    //! @param dirname Ścieżka do katalogu z plikami.
-    //! @param maxFileSize Maksymalny rozmiar pliku, po przekroczeniu którego tworzony jest nowy plik.
-    //! @param maxFiles Maksymalna liczba plików w puli.
-    //! 
     prioritized_template(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff):
-        q(dirname,maxFileSize,maxFiles){}
-    prioritized_template():q("/tmp/invalid_argument",0,0){
+        parent_t(dirname,maxFileSize,maxFiles){
+    }
+    prioritized_template():parent_t("/tmp/invalid_argument",0,0){
         throw std::invalid_argument("ict::queue::prioritized constructor should have arguments!");
     }
     //! 
-    //! @brief Dodaje element do kolejki.
-    //! 
-    //! @param c Element do dodania.
-    //! @param p Priorytet (od 0 - najniższy, do 255 - najwyższy).
-    //! 
-    template <typename ... Args> void push(const container_t & c,const priority_t & p,Args ... a){
-        std::lock_guard<std::mutex> lock(prioritizedMutex);
-        q[p].push(c,a...);
-    }
-    //! 
-    //! @brief Usuwa element z kolejki.
+    //! @brief Zwraca element o najwyższym priorytecie.
     //! 
     //! @param c Element usunięty z kolejki.
-    //! @param p Priorytet (od 0 - najniższy, do 255 - najwyższy).
+    //! @param p Priorytet (od 0 - najniższy, do 255 - najwyższy). 
     //! 
-    template <typename ... Args> void pop(container_t & c,priority_t & p,Args ... a){
-        std::lock_guard<std::mutex> lock(prioritizedMutex);
-        for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it){
-            if (!it->second.empty()){
-                it->second.pop(c,a...);
-                p=it->first;
-                if (it->second.empty()) q.erase(p);
-                return;
-            }
-        }
-        throw std::underflow_error("ict::queue::prioritized is empty???");
-    }
-    //! 
-    //! @brief Zwraca aktualny rozmiar kolejki.
-    //! 
-    //! @return Rozmiar kolejki.
-    //! 
-    std::size_t size(){
-        std::lock_guard<std::mutex> lock(prioritizedMutex);
-        std::size_t s=0;
-        for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it) s+=it->second.size();
-        return(s);
-    }
-    //! 
-    //! @brief Sprawdza, czy kolejka jest pusta.
-    //! 
-    //! @return true Jest pusta.
-    //! @return false Nie jest pusta.
-    //! 
-    bool empty(){
-        std::lock_guard<std::mutex> lock(prioritizedMutex);
-        for (typename pool_t::reverse_iterator it=q.rbegin();it!=q.rend();++it) 
-            if (!it->second.empty()) 
-                return(false);
-        return(true);
-    }
-    //! 
-    //! @brief Czyści kolejkę.
-    //! 
-    void clear(){
-        std::lock_guard<std::mutex> lock(prioritizedMutex);
-        q.clear();
+    template<typename ... Args> void pop(container_t & c,priority_t & p, Args ... args){
+        parent_t::_pt().pop(c,[&](typename parent_t::queue_info_t & _qi){
+                _qi.getAllIds();
+                if (_qi.ids.empty()) throw std::underflow_error("Queue is empty!");
+                _qi.id=*_qi.ids.crbegin();
+                p=_qi.id;
+            },args ...
+        );
     }
 };
 typedef prioritized_template<> prioritized;

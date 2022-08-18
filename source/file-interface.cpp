@@ -1,11 +1,10 @@
 //! @file
 //! @brief File interface module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
 //============================================
 #include "file-interface.hpp"
+#include <filesystem>
 //============================================
 namespace ict { namespace  queue { namespace  file {
 //============================================
@@ -59,7 +59,7 @@ std::size_t interface::getPositionFromFile(){
             };
         }
     }
-    return(output);
+    return output;
 }
 std::size_t interface::getSizeFromFile(){
     std::size_t output=0;
@@ -88,12 +88,14 @@ std::size_t interface::getSizeFromFile(){
             };
         }
     }
-    return(output);
+    return output;
 }
-interface::interface(const ict::queue::types::path_t & dirname,const std::size_t & maxFiles):fpool(dirname,maxFiles),queue_size(0){
+interface::interface(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize,const std::size_t & maxFiles):
+    fpool(dirname,maxFileSize,maxFiles){
+    refresh();
 }
 void interface::writeInfo(){
-    if (readySize){
+    {
         ict::queue::types::record_t r_size={ict::queue::types::queue_size_record,0};
         r_size.data=queue_size;
         getWriteStream()<<r_size;
@@ -111,19 +113,16 @@ std::ofstream & interface::getWriteStream(){
         ostream.reset(new std::ofstream);
         ostream->open(fpool.getPath(0),std::ios::out|std::ios::binary|std::ios::app);
     }
-    return(*ostream);
+    return *ostream;
 }
 std::ifstream & interface::getReadStream(){
     if (!istream){
         if (fpool.empty()) throw std::underflow_error("ict::queue::file::interface is empty!");
         istream.reset(new std::ifstream);
         istream->open(fpool.getPath(fpool.size()-1),std::ios::in|std::ios::binary);
-    }
-    if (!readyRead){
         istream->seekg(getPositionFromFile(),std::ios::beg);
-        readyRead=true;
     }
-    return(*istream);
+    return *istream;
 }
 void interface::nextWriteStream(){
     ostream.reset(nullptr);
@@ -136,10 +135,10 @@ void interface::nextReadStream(){
     writeInfo();
 }
 std::size_t interface::size() const{
-    return(fpool.size());
+    return fpool.size();
 }
 bool interface::empty() const{
-    return(fpool.empty());
+    return fpool.empty();
 }
 void interface::clear(){
     ostream.reset(nullptr);
@@ -148,11 +147,29 @@ void interface::clear(){
     queue_size=0;
 }
 std::atomic_size_t & interface::queueSize(){
+    return queue_size;
+}
+bool interface::refresh(){
+    if (fpool.refresh()){
+        ostream.reset(nullptr);
+        istream.reset(nullptr);
+        queue_size=getSizeFromFile();
+        readySize=true;
+        return true;
+    }
+    if (ostream) if (ostream->tellp()!=std::filesystem::file_size(fpool.getPath(0))){
+        ostream.reset(nullptr);
+        istream.reset(nullptr);
+        queue_size=getSizeFromFile();
+        readySize=true;
+        return true;
+    }
     if (!readySize){
         queue_size=getSizeFromFile();
         readySize=true;
+        return true;
     }
-    return(queue_size);
+    return false;
 }
 //===========================================
 } } }
@@ -211,7 +228,7 @@ REGISTER_TEST(fileinterface,tc1){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 #endif
 //===========================================

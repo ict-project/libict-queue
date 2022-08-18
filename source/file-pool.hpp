@@ -1,11 +1,10 @@
 //! @file
 //! @brief File pool module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -57,7 +56,9 @@ private:
     //! Ścieżka do katalogu z plikami.
     const ict::queue::types::path_t dir;
     //! Maksymalna liczba plików.
-    std::size_t maxSize;
+    const std::size_t max_files;
+    //! Maksymalny rozmiar pliku.
+    const std::size_t max_file_size;
     //! Lista plików.
     list_t list;
     //! 
@@ -96,7 +97,7 @@ public:
     //! @param dirname Ścieżka do katalogu z plikami.
     //! @param max Maksymalna liczba plików.
     //! 
-    pool(const ict::queue::types::path_t & dirname,const std::size_t & max=0xffffffff);
+    pool(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize=1000000,const std::size_t & maxFiles=0xffffffff);
     //! 
     //! @brief Zwraca ścieżkę do pliku o podanym indeksie.
     //! 
@@ -129,6 +130,10 @@ public:
     //! @brief Usuwa wszystkie pliki z puli.
     //! 
     void clear();
+    //! 
+    //! @brief Sprawdza, czy pula wymaga przeładowania i przeładowuje, jeśli jest tp potrzebne. 
+    //!
+    bool refresh();
 };
 //===========================================
 } } }

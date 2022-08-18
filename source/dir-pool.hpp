@@ -1,11 +1,10 @@
 //! @file
 //! @brief Directory pool module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,6 +38,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 #include <set>
+#include <map>
+#include <type_traits>
+
 #include "types.hpp"
 //============================================
 namespace ict { namespace  queue { namespace  dir {
@@ -121,14 +123,14 @@ public:
     //! 
     //! @param dirname Ścieżka do katalogu z pulą katalogów.
     //! 
-    pool(const ict::queue::types::path_t & dirname);
+    pool(const ict::queue::types::path_t & dirname);//OK
     //! 
     //! @brief Zwraca ścieżkę do katalogu o podanym id.
     //! 
     //! @param id Identyfikator katalogu.
     //! @return Ścieżka do pliku.
     //! 
-    template <typename Identifier> const ict::queue::types::path_t getPath(const Identifier & id) const{
+    template <typename Identifier> const ict::queue::types::path_t getPath(const Identifier & id) const{//OK
         std::string s;
         idToString(id,s);
         return(getPathString(s));
@@ -141,7 +143,7 @@ public:
     //! 
     template <typename Identifier> void getAllIds(std::set<Identifier> & output){
         output.clear();
-        if (ids.empty()) getAllIdsString(ids);
+        getAllIdsString(ids);
         for (const std::string & s:ids) {
             Identifier i;
             idFromString(s,i);
@@ -154,7 +156,7 @@ public:
     //! @tparam Identifier Typ identyfikatora.
     //! @param id ID nowej kolejki.
     //! 
-    template <typename Identifier> void add(const Identifier & id){
+    template <typename Identifier> void add(const Identifier & id){//OK
         std::string s;
         idToString(id,s);
         addString(s);
@@ -165,7 +167,7 @@ public:
     //! @tparam Identifier Identifier Typ identyfikatora.
     //! @param id ID kolejki do usunięcia.
     //! 
-    template <typename Identifier> void remove(const Identifier & id){
+    template <typename Identifier> void remove(const Identifier & id){//OK
         std::string s;
         idToString(id,s);
         removeString(s);
@@ -176,7 +178,7 @@ public:
     //! @tparam Identifier Identifier Typ identyfikatora.
     //! @param id ID kolejki.
     //! 
-    template <typename Identifier> bool exists(const Identifier & id){
+    template <typename Identifier> bool exists(const Identifier & id){//OK
         std::string s;
         idToString(id,s);
         return(existsString(s));
@@ -197,7 +199,7 @@ public:
     //! 
     //! @brief Usuwa wszystkie katalogi z puli.
     //! 
-    void clear();
+    void clear();//OK
     //! 
     //! @brief Koduje string w taki sposób, by można go było użyć w nazwie katalogu.
     //! 

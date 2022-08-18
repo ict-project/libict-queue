@@ -1,11 +1,10 @@
 //! @file
 //! @brief Basic queue module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,18 +34,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
 //============================================
 #include "basic.hpp"
+#include <filesystem>
 //============================================
 namespace ict { namespace  queue {
 //============================================
-basic::basic(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize,const std::size_t & maxFiles):max_file_size(maxFileSize),iface(dirname,maxFiles){
+basic::basic(const ict::queue::types::path_t & dirname,const std::size_t & maxFileSize,const std::size_t & maxFiles):
+    max_file_size(maxFileSize),iface(dirname,maxFileSize,maxFiles){
 }
 void basic::writeSize(const std::size_t & size){
     {
         std::lock_guard<std::mutex> lock(writeMutex);
-        if (writeOperation) throw std::domain_error("ict::queue::basic writeContent shuld be done now!");
+        if (writeOperation) throw std::domain_error("ict::queue::basic writeContent should be done now!");
         writeOperation=true;
         writeRecord.data=size;
-        if ((iface.empty())||(max_file_size<iface.getWriteStream().tellp())){
+        if (iface.empty()){
             iface.nextWriteStream();
         }
         iface.getWriteStream()<<writeRecord;
@@ -56,7 +57,7 @@ void basic::writeContent(const char * content){
     if (!content) throw std::invalid_argument("ict::queue::basic content is null!");
     {
         std::lock_guard<std::mutex> lock(writeMutex);
-        if (!writeOperation) throw std::domain_error("ict::queue::basic writeSize shuld be done first!");
+        if (!writeOperation) throw std::domain_error("ict::queue::basic writeSize should be done first!");
         if (writeRecord.data) iface.getWriteStream().write(content,writeRecord.data);
         iface.getWriteStream().flush();
         writeRecord.data=0;
@@ -65,6 +66,9 @@ void basic::writeContent(const char * content){
     {
         std::lock_guard<std::mutex> lock(writeMutex);
         writeOperation=false;
+        if (max_file_size<iface.getWriteStream().tellp()){
+            iface.nextWriteStream();
+        }
     }
 }
 void basic::readSize(std::size_t & size){
@@ -111,7 +115,7 @@ void basic::readContent(char * content){
     }
     {
         std::lock_guard<std::mutex> lock(writeMutex);
-        if ((iface.empty())||(max_file_size<iface.getWriteStream().tellp())){
+        if (iface.empty()){
             iface.nextWriteStream();
         }
         iface.getWriteStream()<<record;
@@ -121,16 +125,22 @@ void basic::readContent(char * content){
     {
         std::lock_guard<std::mutex> lock(readMutex);
         readOperation=false;
+        if (max_file_size<iface.getWriteStream().tellp()){
+            iface.nextWriteStream();
+        }
     }
 }
 std::size_t basic::size() {
-    return(iface.queueSize());
+    return iface.queueSize();
 }
 bool basic::empty() {
-    return(iface.queueSize()==0);
+    return iface.queueSize()==0;
 }
 void basic::clear(){
     iface.clear();
+}
+bool basic::refresh(){
+    return iface.refresh();
 }
 //===========================================
 } }
@@ -142,6 +152,7 @@ void basic::clear(){
 static ict::queue::types::path_t dirpath("/tmp/test-basic");
 REGISTER_TEST(basic,tc1){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
@@ -163,22 +174,25 @@ REGISTER_TEST(basic,tc1){
             if (ict::test::test_string.at(i).size()!=s){
                 std::cerr<<"test_string["<<i<<"].size()="<<ict::test::test_string.at(i).size()<<std::endl;
                 std::cerr<<"s="<<s<<std::endl;
-                out=1;
+                std::cerr<<"i="<<i<<std::endl;
+                out=2;
                 break;
             }
             if (ict::test::test_string.at(i)!=c){
                 std::cerr<<"test_string["<<i<<"]="<<ict::test::test_string.at(i)<<std::endl;
                 std::cerr<<"c="<<c<<std::endl;
-                out=2;
+                std::cerr<<"i="<<i<<std::endl;
+                out=3;
                 break;
             }
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(basic,tc2){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
@@ -223,10 +237,11 @@ REGISTER_TEST(basic,tc2){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(basic,tc3){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath,100);
@@ -268,10 +283,11 @@ REGISTER_TEST(basic,tc3){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(basic,tc4){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::basic queue(dirpath);
@@ -313,10 +329,11 @@ REGISTER_TEST(basic,tc4){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(basic,tc5){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     std::size_t half=ict::test::test_string.size()/2;
     {
@@ -376,7 +393,7 @@ REGISTER_TEST(basic,tc5){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 #endif
 //===========================================

@@ -1,11 +1,10 @@
 //! @file
 //! @brief Prioritized queue module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,6 +49,7 @@ namespace ict { namespace  queue {
 static ict::queue::types::path_t dirpath("/tmp/test-prioritized");
 REGISTER_TEST(prioritized,tc1){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::prioritized queue(dirpath,100);
@@ -61,7 +61,7 @@ REGISTER_TEST(prioritized,tc1){
             std::cerr<<"queue.size()="<<queue.size()<<std::endl;
             out=1;
         }
-        for (size_t i=0;i<ict::test::test_string.size();i++){
+        if (!out) for (size_t i=0;i<ict::test::test_string.size();i++){
             ict::queue::prioritized::priority_t p;
             std::string c;
             queue.pop(c,p);
@@ -83,6 +83,7 @@ REGISTER_TEST(prioritized,tc1){
 }
 REGISTER_TEST(prioritized,tc2){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::prioritized_wstring queue(dirpath,100);
@@ -116,6 +117,7 @@ REGISTER_TEST(prioritized,tc2){
 }
 REGISTER_TEST(prioritized,tc3){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::prioritized queue(dirpath);
@@ -142,6 +144,7 @@ REGISTER_TEST(prioritized,tc3){
 }
 REGISTER_TEST(prioritized,tc4){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::prioritized queue(dirpath,100);
@@ -190,20 +193,13 @@ REGISTER_TEST(prioritized,tc4){
 }
 REGISTER_TEST(prioritized,tc5){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     if (out==0){
         ict::queue::pool_string_prioritized_string pool(dirpath);
-        if(pool["pierwszy"].size()!=0){
+        if(pool.size("pierwszy")!=0){
             out=1;
         }
-    }
-    if (out==0){
-        ict::queue::pool_string_prioritized_string pool(dirpath);
-        if(!pool.count("pierwszy")){
-            out=2;
-        }
-        pool.erase("pierwszy");
-        pool.clear();
     }
     std::filesystem::remove_all(dirpath);
     return(out);

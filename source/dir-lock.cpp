@@ -1,10 +1,10 @@
 //! @file
-//! @brief Queue pool module - Source file.
+//! @brief Directory lock module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @date 2012-2022
+//! @date 2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,32 +33,56 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
 //============================================
-#include "pool.hpp"
+#include "dir-lock.hpp"
+#include <unistd.h>
+#include <fcntl.h>
 //============================================
-namespace ict { namespace  queue { 
+namespace ict { namespace  queue { namespace  dir {
 //============================================
-
+const std::string lockable::file_name="/dir.lock";
+void lockable::lock(){
+    if (fd<0){
+        fd=::open(file_path.c_str(),O_RDWR|O_CREAT,S_IRUSR|S_IWUSR);
+    }
+    if (fd<0) return;
+    ::lockf(fd,F_LOCK,1);
+}
+void lockable::unlock(){
+    if (fd<0) return;
+    ::lockf(fd,F_ULOCK,1);
+    ::close(fd);
+    fd=-1;
+}
+void lockable::readHash(hash & h) const {
+    if (fd<0) return;
+    ::lseek(fd,0,SEEK_SET);
+    ::read(fd,&h,sizeof(h));
+}
+void lockable::writeHash(const hash & h)const {
+    if (fd<0) return;
+    ::lseek(fd,0,SEEK_SET);
+    ::write(fd,&h,sizeof(h));
+}
 //===========================================
-} }
+} } }
 //===========================================
 #ifdef ENABLE_TESTING
 #include "test.hpp"
+#include <mutex>
 #include <filesystem>
-
-static ict::queue::types::path_t dirpath("/tmp/test-pool");
-REGISTER_TEST(pool,tc1){
+static ict::queue::types::path_t dirpath("/tmp/test-lock");
+REGISTER_TEST(dir_lock,tc1){
     int out=0;
-    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        if(pool.size("pierwszy")!=0){
-            out=1;
-        }
-    }
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        pool.clear("pierwszy");
+    {
+        ict::queue::dir::lockable::hash hin={1,2};
+        ict::queue::dir::lockable::hash hout={4,5};
+        ict::queue::dir::lockable flock(dirpath);
+        std::lock_guard<ict::queue::dir::lockable> lg(flock);
+        flock.writeHash(hin);
+        flock.readHash(hout);
+        if (hin.size!=hout.size) out=-1;
+        if (hin.hash!=hout.hash) out=-2;
     }
     std::filesystem::remove_all(dirpath);
     return(out);

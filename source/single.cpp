@@ -1,11 +1,10 @@
 //! @file
 //! @brief Single queue module - Source file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @version 1.0
-//! @date 2012-2021
+//! @date 2012-2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2021, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,6 +49,7 @@ namespace ict { namespace  queue {
 static ict::queue::types::path_t dirpath("/tmp/test-single");
 REGISTER_TEST(single,tc1){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::single queue(dirpath,100);
@@ -73,10 +73,11 @@ REGISTER_TEST(single,tc1){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(single,tc2){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::single_wstring queue(dirpath,100);
@@ -100,21 +101,22 @@ REGISTER_TEST(single,tc2){
         }
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
 }
 REGISTER_TEST(single,tc3){
     int out=0;
+    std::filesystem::remove_all(dirpath);
     std::filesystem::create_directory(dirpath);
     {
         ict::queue::single queue(dirpath);
         std::size_t max=1000000;
         std::string out;
         auto start=std::chrono::high_resolution_clock::now();
-        for (size_t k=0;k<max;k++){
-            size_t i=k%ict::test::test_string.size();
+        for (std::size_t k=0;k<max;k++){
+            std::size_t i=k%ict::test::test_string.size();
             queue.push(ict::test::test_string.at(i));
         }
-        for (size_t k=0;k<max;k++){
+        for (std::size_t k=0;k<max;k++){
             queue.pop(out);
         }
         auto elapsed=std::chrono::high_resolution_clock::now()-start;
@@ -122,10 +124,50 @@ REGISTER_TEST(single,tc3){
         float rate=2*max*1000000;
         rate/=microseconds;
         std::cout<<"time("<<max<<" writes & "<<max<<" reads)="<<microseconds<<" microseconds"<<std::endl;
-        std::cout<<"rate( writes & reads)="<<rate<<" operations/sec"<<std::endl;
+        std::cout<<"rate(writes & reads)="<<rate<<" operations/sec"<<std::endl;
     }
     std::filesystem::remove_all(dirpath);
-    return(out);
+    return out;
+}
+REGISTER_TEST(single,tc4){
+    int out=0;
+    std::filesystem::remove_all(dirpath);
+    std::filesystem::create_directory(dirpath);
+    {
+        std::string input;
+        ict::queue::single queue(dirpath);
+        std::size_t max=7000;
+        input.resize(128000,'x'); 
+        auto start=std::chrono::high_resolution_clock::now();
+        for (std::size_t k=0;k<max;k++){
+            queue.push(input);
+        }
+        max=queue.size();
+        auto elapsed=std::chrono::high_resolution_clock::now()-start;
+        long long microseconds=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        float rate=max*1000000;
+        rate/=microseconds;
+        std::cout<<"time("<<max<<" writes)="<<microseconds<<" microseconds"<<std::endl;
+        std::cout<<"rate(writes)="<<rate<<" operations/sec"<<std::endl;
+    }
+    {
+        std::string output;
+        ict::queue::single queue(dirpath);
+        std::size_t count=0;
+        auto start=std::chrono::high_resolution_clock::now();
+        while(!queue.empty()){
+            queue.pop(output);
+            count++;
+        }
+        auto elapsed=std::chrono::high_resolution_clock::now()-start;
+        long long microseconds=std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
+        float rate=count*1000000;
+        rate/=microseconds;
+        std::cout<<"time("<<count<<" reads)="<<microseconds<<" microseconds"<<std::endl;
+        std::cout<<"rate(reads)="<<rate<<" operations/sec"<<std::endl;
+    }
+    std::filesystem::remove_all(dirpath);
+    return out;
 }
 #endif
 //===========================================

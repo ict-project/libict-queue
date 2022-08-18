@@ -1,10 +1,10 @@
 //! @file
-//! @brief Queue pool module - Source file.
+//! @brief Directory lock module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @date 2012-2022
+//! @date 2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,36 +32,31 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
+#ifndef _DIR_LOCK_HEADER
+#define _DIR_LOCK_HEADER
 //============================================
-#include "pool.hpp"
+#include <string>
+#include "types.hpp"
 //============================================
-namespace ict { namespace  queue { 
-//============================================
-
+namespace ict { namespace  queue { namespace  dir {
 //===========================================
-} }
+class lockable{
+private:
+    static const std::string file_name;
+    const std::string file_path;
+    int fd=-1;
+public:
+    lockable(const std::string & dirname):file_path(dirname+file_name){}
+    void lock();
+    void unlock();
+    struct hash {
+        std::size_t size=-1;
+        std::size_t hash=-1;
+    };
+    void readHash(hash & h) const;
+    void writeHash(const hash & h) const;
+};
 //===========================================
-#ifdef ENABLE_TESTING
-#include "test.hpp"
-#include <filesystem>
-
-static ict::queue::types::path_t dirpath("/tmp/test-pool");
-REGISTER_TEST(pool,tc1){
-    int out=0;
-    std::filesystem::remove_all(dirpath);
-    std::filesystem::create_directory(dirpath);
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        if(pool.size("pierwszy")!=0){
-            out=1;
-        }
-    }
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        pool.clear("pierwszy");
-    }
-    std::filesystem::remove_all(dirpath);
-    return(out);
-}
+} } }
+//============================================
 #endif
-//===========================================

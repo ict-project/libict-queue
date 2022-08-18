@@ -1,10 +1,10 @@
 //! @file
-//! @brief Queue pool module - Source file.
+//! @brief Directory singleton module - header file.
 //! @author Mariusz Ornowski (mariusz.ornowski@ict-project.pl)
-//! @date 2012-2022
+//! @date 2022
 //! @copyright ICT-Project Mariusz Ornowski (ict-project.pl)
 /* **************************************************************
-Copyright (c) 2012-2022, ICT-Project Mariusz Ornowski (ict-project.pl)
+Copyright (c) 2022, ICT-Project Mariusz Ornowski (ict-project.pl)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -32,36 +32,57 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **************************************************************/
+#ifndef _DIR_SINGLETON_HEADER
+#define _DIR_SINGLETON_HEADER
 //============================================
-#include "pool.hpp"
+#include <string>
+#include <map>
+#include <memory>
+#include <mutex>
+#include "types.hpp"
 //============================================
-namespace ict { namespace  queue { 
-//============================================
-
+namespace ict { namespace  queue { namespace  dir {
 //===========================================
-} }
-//===========================================
-#ifdef ENABLE_TESTING
-#include "test.hpp"
-#include <filesystem>
-
-static ict::queue::types::path_t dirpath("/tmp/test-pool");
-REGISTER_TEST(pool,tc1){
-    int out=0;
-    std::filesystem::remove_all(dirpath);
-    std::filesystem::create_directory(dirpath);
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        if(pool.size("pierwszy")!=0){
-            out=1;
+bool equivalent(const ict::queue::types::path_t & lhs,const ict::queue::types::path_t & rhs) noexcept;
+template<class T,typename ... A> class singleton {
+private:
+    typedef std::shared_ptr<T> ptr_t;
+    typedef std::map<ict::queue::types::path_t,ptr_t> map_t;
+    static std::mutex mutex;
+    static map_t map;
+    ptr_t ptr;
+    ict::queue::types::path_t path;
+public:
+    singleton(const ict::queue::types::path_t & p,A ... args):path(p){
+        std::lock_guard<std::mutex> lock(mutex);
+        if (map.count(p)){
+            ptr=map[p];
+            return;
+        }
+        for (typename map_t::const_iterator it=map.cbegin();it!=map.cend();++it){
+            if (equivalent(p,it->first)) {
+                ptr=it->second;
+                path=it->first;
+                return;
+            }
+        }
+        ptr.reset(new T(p,args...));
+        map[p]=ptr;
+    }
+    ~singleton(){
+        std::lock_guard<std::mutex> lock(mutex);
+        ptr.reset();
+        if (map.count(path)) if (map.at(path).use_count()<=1){
+            map.erase(path);
         }
     }
-    if (out==0){
-        ict::queue::pool_string_string pool(dirpath);
-        pool.clear("pierwszy");
+    T & operator ()(){
+        return *ptr;
     }
-    std::filesystem::remove_all(dirpath);
-    return(out);
-}
-#endif
+};
+template<class T,typename ... A> std::mutex singleton<T,A ...>::mutex;
+template<class T,typename ... A> typename singleton<T,A ...>::map_t singleton<T,A ...>::map;
 //===========================================
+} } }
+//============================================
+#endif
