@@ -5,6 +5,16 @@ LOOP_MAX="3000"
 PUSH_CMD=$1
 POP_CMD=$2
 
+if [[ -d Debug ]];then
+    PUSH_CMD="Debug/$PUSH_CMD"
+    POP_CMD="Debug/$POP_CMD"
+else
+    if [[ -d Release ]];then
+        PUSH_CMD="Release/$PUSH_CMD"
+        POP_CMD="Release/$POP_CMD"
+    fi
+fi
+
 if [[ -x $PUSH_CMD ]]; then
     echo "Push cmd: $PUSH_CMD $DATA_DIR"
 else
@@ -47,8 +57,7 @@ pop_loop () {
 push_loop &
 sleep 1
 pop_loop &
-wait -n
-wait -n
+wait
 
 if [[ -r $ERROR_FILE ]]; then
     cat $ERROR_FILE
