@@ -1,4 +1,4 @@
-# Persistent queue implementation [![Build Status](https://app.travis-ci.com/ict-project/libict-queue.svg?branch=main)](https://app.travis-ci.com/ict-project/libict-queue)
+# Persistent queue implementation
 
 This code implements a queue that is stored entirely in files. New elements are added immediately to the files.
 As of version v2.0, concurrent access to the directory with the queue data is possible by many independent processes.
